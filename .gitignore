@@ -1,0 +1,40 @@
+# --- Секреты и Конфигурация ---
+.env
+*.env
+config.py
+!bot_api/config.py.example
+
+# --- Python / Бэкенд ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+ENV/
+env/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+
+# --- Node.js / Фронтенд (Web App) ---
+webapp/node_modules/
+webapp/dist/
+webapp/dist-ssr/
+*.local
+
+# --- Логи и Базы данных ---
+*.log
+data/*.db
+data/*.sqlite
+# Мы НЕ игнорируем data/stats.json, так как он служит нашей базой для GitHub Pages
+
+# --- Системные файлы ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Специфично для проекта ---
+# Если решишь хранить архивы скачанных CSV локально
+parser/temp_data/
