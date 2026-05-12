@@ -4,7 +4,12 @@
     "confirmed": 9,
     "suspected": 0,
     "deaths": 0,
-    "last_update": "2026-05-12 20:47"
+    "cfr": 0.0,
+    "new_24h": 0,
+    "new_7d": 0,
+    "countries_count": 0,
+    "last_update": "2026-05-12T22:01:29Z",
+    "last_update_readable": "12.05.2026 22:01 UTC"
   },
-  "countries": {}
+  "countries": []
 }
