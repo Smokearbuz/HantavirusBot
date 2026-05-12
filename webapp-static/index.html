@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>HantaTracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c10;
+    --bg2: #0d1219;
+    --bg3: #111720;
+    --surface: #141c27;
+    --surface2: #1a2535;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.1);
+    --red: #ff3b30;
+    --red-dim: rgba(255,59,48,0.15);
+    --red-glow: rgba(255,59,48,0.3);
+    --orange: #ff9500;
+    --orange-dim: rgba(255,149,0,0.12);
+    --green: #30d158;
+    --green-dim: rgba(48,209,88,0.12);
+    --blue: #0a84ff;
+    --blue-dim: rgba(10,132,255,0.1);
+    --text: #e8ecf0;
+    --text2: #8a9bb0;
+    --text3: #4a5a6e;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === AMBIENT BG === */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -30vh; left: -20vw;
+    width: 80vw; height: 80vh;
+    background: radial-gradient(ellipse, rgba(255,59,48,0.04) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -20vh; right: -20vw;
+    width: 60vw; height: 60vh;
+    background: radial-gradient(ellipse, rgba(10,132,255,0.05) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* === VIRUS CANVAS BG === */
+  #virusCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* === LAYOUT === */
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 430px;
+    margin: 0 auto;
+    padding-bottom: 90px;
+  }
+
+  /* === HEADER === */
+  .header {
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .virus-icon {
+    width: 36px; height: 36px;
+    background: var(--red-dim);
+    border: 1px solid rgba(255,59,48,0.3);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    animation: pulse-icon 3s ease-in-out infinite;
+  }
+  @keyframes pulse-icon {
+    0%,100% { box-shadow: 0 0 0 0 var(--red-glow); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+  .app-title {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .app-title span { color: var(--red); }
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,59,48,0.1);
+    border: 1px solid rgba(255,59,48,0.2);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red);
+    letter-spacing: 0.08em;
+  }
+  .live-dot {
+    width: 5px; height: 5px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* === ALERT BANNER === */
+  .alert-banner {
+    margin: 16px 20px 0;
+    background: linear-gradient(135deg, rgba(255,59,48,0.08), rgba(255,59,48,0.04));
+    border: 1px solid rgba(255,59,48,0.2);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: fadeSlideIn 0.6s ease;
+  }
+  .alert-icon { font-size: 20px; flex-shrink: 0; }
+  .alert-text {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text2);
+  }
+  .alert-text strong { color: #ffcc02; font-weight: 600; }
+
+  /* === GLOBAL STATS === */
+  .section { padding: 20px 20px 0; }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .global-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .global-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), transparent);
+  }
+
+  .global-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .global-number {
+    font-family: var(--mono);
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .global-number-label {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+  .global-right {
+    text-align: right;
+  }
+  .delta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--red-dim);
+    border: 1px solid rgba(255,59,48,0.25);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--red);
+  }
+  .delta-badge.green { background: var(--green-dim); border-color: rgba(48,209,88,0.25); color: var(--green); }
+  .global-meta {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-top: 4px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+  }
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-value.red { color: var(--red); }
+  .stat-value.orange { color: var(--orange); }
+  .stat-value.green { color: var(--green); }
+  .stat-key {
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  /* === UPDATE BAR === */
+  .update-bar {
+    margin: 12px 20px 0;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .update-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+  .update-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+  .update-time { color: var(--green); }
+  .refresh-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--blue);
+    background: none;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+
+  /* === TABS === */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    padding: 16px 20px 0;
+  }
+  .tab {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 0;
+    text-align: center;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .tab.active {
+    background: var(--red-dim);
+    border-color: rgba(255,59,48,0.35);
+    color: var(--red);
+  }
+
+  /* === COUNTRY LIST === */
+  .country-search {
+    margin: 14px 20px 0;
+    position: relative;
+  }
+  .country-search input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 14px 11px 38px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .country-search input:focus { border-color: rgba(255,59,48,0.3); }
+  .country-search input::placeholder { color: var(--text3); }
+  .search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 14px;
+  }
+
+  .country-list {
+    margin: 10px 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .country-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    animation: fadeSlideIn 0.4s ease both;
+  }
+  .country-item:active { transform: scale(0.98); }
+  .country-item:hover { border-color: var(--border2); background: var(--surface2); }
+  .country-item.top1 { border-color: rgba(255,59,48,0.25); }
+  .country-item.top2 { border-color: rgba(255,149,0,0.18); }
+
+  .country-flag { font-size: 24px; flex-shrink: 0; }
+  .country-info { flex: 1; min-width: 0; }
+  .country-name {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .country-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  .country-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .country-count {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .country-count.high { color: var(--red); }
+  .country-count.med { color: var(--orange); }
+  .country-new {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red);
+    margin-top: 2px;
+  }
+  .country-bar-wrap {
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .country-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--red), var(--orange));
+    transition: width 0.8s ease;
+  }
+
+  /* === DETAIL VIEW === */
+  .detail-view {
+    display: none;
+    animation: fadeSlideIn 0.35s ease;
+  }
+  .detail-view.show { display: block; }
+  .detail-header {
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 34px; height: 34px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .detail-flag { font-size: 32px; }
+  .detail-country-name {
+    font-size: 20px;
+    font-weight: 800;
+    flex: 1;
+  }
+  .notify-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(10,132,255,0.1);
+    border: 1px solid rgba(10,132,255,0.25);
+    border-radius: 10px;
+    padding: 7px 12px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .notify-btn.active {
+    background: rgba(48,209,88,0.1);
+    border-color: rgba(48,209,88,0.3);
+    color: var(--green);
+  }
+
+  .detail-stats-grid {
+    margin: 16px 20px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .detail-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .detail-stat-card.full { grid-column: 1 / -1; }
+  .detail-stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border2), transparent);
+  }
+  .dsc-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .dsc-value {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-top: 4px;
+  }
+  .dsc-value.red { color: var(--red); }
+  .dsc-value.orange { color: var(--orange); }
+  .dsc-value.green { color: var(--green); }
+  .dsc-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* === MINI CHART === */
+  .chart-card {
+    margin: 10px 20px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .chart-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 60px;
+  }
+  .chart-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .chart-bar {
+    width: 100%;
+    background: linear-gradient(180deg, var(--red), rgba(255,59,48,0.3));
+    border-radius: 3px 3px 0 0;
+    min-height: 2px;
+  }
+  .chart-bar-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text3);
+  }
+
+  /* === TIMELINE === */
+  .timeline {
+    margin: 10px 20px 0;
+  }
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    animation: fadeSlideIn 0.4s ease both;
+  }
+  .timeline-item:last-child { border-bottom: none; }
+  .timeline-dot-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 3px;
+    width: 12px;
+    flex-shrink: 0;
+  }
+  .timeline-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .timeline-dot.confirmed { background: var(--red); box-shadow: 0 0 6px var(--red-glow); }
+  .timeline-dot.suspected { background: var(--orange); }
+  .timeline-dot.recovered { background: var(--green); }
+  .tl-content { flex: 1; }
+  .tl-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .tl-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  .tl-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+  }
+  .tl-tag.confirmed { background: var(--red-dim); color: var(--red); }
+  .tl-tag.suspected { background: var(--orange-dim); color: var(--orange); }
+  .tl-tag.deceased { background: rgba(255,59,48,0.2); color: #ff6b6b; }
+
+  /* === NOTIFICATIONS PAGE === */
+  .notif-page { display: none; }
+  .notif-page.show { display: block; }
+
+  .notif-hero {
+    margin: 20px 20px 0;
+    background: linear-gradient(135deg, rgba(10,132,255,0.08), rgba(10,132,255,0.03));
+    border: 1px solid rgba(10,132,255,0.15);
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+  }
+  .notif-hero-icon { font-size: 36px; margin-bottom: 8px; }
+  .notif-hero-title {
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .notif-hero-sub {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  .subscriptions-list {
+    margin: 14px 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sub-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sub-flag { font-size: 22px; }
+  .sub-info { flex: 1; }
+  .sub-name { font-size: 14px; font-weight: 700; }
+  .sub-freq {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  .toggle {
+    width: 44px; height: 26px;
+    background: var(--green);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; right: 3px;
+    transition: right 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .toggle.off { background: var(--surface2); }
+  .toggle.off::after { right: calc(100% - 23px); }
+
+  .add-country-btn {
+    margin: 10px 20px 0;
+    width: calc(100% - 40px);
+    background: none;
+    border: 1px dashed var(--border2);
+    border-radius: 14px;
+    padding: 13px;
+    color: var(--text3);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .add-country-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* === BOTTOM NAV === */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: rgba(8,12,16,0.92);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 20px;
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 6px 0;
+    transition: all 0.2s;
+  }
+  .nav-icon { font-size: 20px; opacity: 0.4; transition: opacity 0.2s; }
+  .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+    transition: color 0.2s;
+  }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .nav-item.active .nav-label { color: var(--red); }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 4px var(--red)); }
+
+  /* === NEWS SECTION === */
+  .news-list {
+    margin: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .news-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .news-item:hover { border-color: var(--border2); }
+  .news-source {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--blue);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .news-title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 5px;
+  }
+  .news-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .count-up { animation: countIn 0.5s ease; }
+  @keyframes countIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* === PAGES === */
+  .page { display: none; }
+  .page.active { display: block; animation: fadeSlideIn 0.3s ease; }
+
+  /* === RISK METER === */
+  .risk-meter {
+    margin: 10px 20px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .risk-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .risk-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .risk-level {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--orange);
+    font-weight: 700;
+  }
+  .risk-track {
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .risk-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--orange), var(--red));
+    border-radius: 3px;
+    width: 65%;
+    transition: width 1s ease;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<canvas id="virusCanvas"></canvas>
+
+<div class="app">
+
+  <!-- ====== PAGE: GLOBAL ====== -->
+  <div class="page active" id="page-global">
+
+    <div class="header">
+      <div class="header-left">
+        <div class="virus-icon">🦠</div>
+        <div>
+          <div class="app-title">Hanta<span>Tracker</span></div>
+        </div>
+      </div>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        LIVE
+      </div>
+    </div>
+
+    <div class="alert-banner">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text">
+        Вспышка хантавируса <strong>Andes (ANDV)</strong> — 2026. Отслеживаем глобальную статистику в реальном времени.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">/ глобальная статистика</div>
+      <div class="global-card">
+        <div class="global-main">
+          <div>
+            <div class="global-number count-up" id="globalCount">247</div>
+            <div class="global-number-label">подтв. + подозр. случаев</div>
+          </div>
+          <div class="global-right">
+            <div class="delta-badge">▲ +12</div>
+            <div class="global-meta">за 24 часа</div>
+          </div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-item">
+            <div class="stat-value red">189</div>
+            <div class="stat-key">Подтверждено</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value orange">58</div>
+            <div class="stat-key">Подозреваемых</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value green">34</div>
+            <div class="stat-key">Выздоровели</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="update-bar">
+      <div class="update-left">
+        <div class="update-dot"></div>
+        Обновлено: <span class="update-time">2 мин. назад</span>
+      </div>
+      <button class="refresh-btn">↻ ОБНОВИТЬ</button>
+    </div>
+
+    <div class="risk-meter">
+      <div class="risk-label-row">
+        <div class="risk-title">Уровень угрозы (WHO)</div>
+        <div class="risk-level">УМЕРЕННЫЙ</div>
+      </div>
+      <div class="risk-track">
+        <div class="risk-fill"></div>
+      </div>
+    </div>
+
+    <div class="section" style="padding-top:14px">
+      <div class="section-label">/ по странам</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">Все страны</div>
+      <div class="tab">Топ 5</div>
+      <div class="tab">Новые</div>
+    </div>
+
+    <div class="country-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Найти страну..." id="searchInput" oninput="filterCountries()">
+    </div>
+
+    <div class="country-list" id="countryList">
+      <!-- filled by JS -->
+    </div>
+
+  </div>
+
+  <!-- ====== PAGE: DETAIL ====== -->
+  <div class="page" id="page-detail">
+    <div class="detail-header">
+      <div class="back-btn" onclick="showPage('global')">←</div>
+      <div class="detail-flag" id="detailFlag">🇦🇷</div>
+      <div class="detail-country-name" id="detailName">Аргентина</div>
+      <button class="notify-btn" id="notifyBtn" onclick="toggleNotify()">🔔 Следить</button>
+    </div>
+
+    <div class="detail-stats-grid">
+      <div class="detail-stat-card">
+        <div class="dsc-label">Всего случаев</div>
+        <div class="dsc-value red" id="dTotal">87</div>
+        <div class="dsc-sub">confirmed + suspected</div>
+      </div>
+      <div class="detail-stat-card">
+        <div class="dsc-label">Смертность</div>
+        <div class="dsc-value orange" id="dCFR">38%</div>
+        <div class="dsc-sub">case fatality rate</div>
+      </div>
+      <div class="detail-stat-card">
+        <div class="dsc-label">Новые за 7 дней</div>
+        <div class="dsc-value red" id="dNew">+6</div>
+        <div class="dsc-sub">активная передача</div>
+      </div>
+      <div class="detail-stat-card">
+        <div class="dsc-label">Выздоровели</div>
+        <div class="dsc-value green" id="dRecov">21</div>
+        <div class="dsc-sub">confirmed recovered</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">/ динамика за 14 дней</div>
+      <div class="chart-bars" id="miniChart"></div>
+    </div>
+
+    <div class="section" style="padding-top:14px">
+      <div class="section-label">/ последние случаи</div>
+    </div>
+
+    <div class="timeline" id="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot-wrap"><div class="timeline-dot confirmed"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Провинция Рио-Негро</div>
+          <div class="tl-meta">12 мая 2026 · М · 34 года</div>
+          <span class="tl-tag confirmed">CONFIRMED</span>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot-wrap"><div class="timeline-dot suspected"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Провинция Неукен</div>
+          <div class="tl-meta">11 мая 2026 · Ж · 28 лет</div>
+          <span class="tl-tag suspected">SUSPECTED</span>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot-wrap"><div class="timeline-dot deceased"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Провинция Чубут</div>
+          <div class="tl-meta">10 мая 2026 · М · 51 год</div>
+          <span class="tl-tag deceased">DECEASED</span>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot-wrap"><div class="timeline-dot confirmed"></div></div>
+        <div class="tl-content">
+          <div class="tl-title">Провинция Буэнос-Айрес</div>
+          <div class="tl-meta">9 мая 2026 · М · 19 лет</div>
+          <span class="tl-tag confirmed">CONFIRMED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PAGE: NEWS ====== -->
+  <div class="page" id="page-news">
+    <div class="header" style="margin-bottom:16px">
+      <div class="header-left">
+        <div style="font-size:22px">📰</div>
+        <div class="app-title">Ново<span>сти</span></div>
+      </div>
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    </div>
+
+    <div class="news-list">
+      <div class="news-item">
+        <div class="news-source">🌐 WHO · 12 МАЯ 2026</div>
+        <div class="news-title">ВОЗ подтвердила передачу хантавируса между людьми в нескольких случаях в Чили</div>
+        <div class="news-date">12 мая 2026 — 3 часа назад</div>
+      </div>
+      <div class="news-item">
+        <div class="news-source">🇦🇷 MINISTERIO SALUD · 11 МАЯ</div>
+        <div class="news-title">Аргентина объявила режим эпидемиологической тревоги в 4 провинциях Патагонии</div>
+        <div class="news-date">11 мая 2026 — вчера</div>
+      </div>
+      <div class="news-item">
+        <div class="news-source">🇨🇭 SWISS NCRE · 10 МАЯ</div>
+        <div class="news-title">Опубликована первая последовательность ANDV-Switzerland-Hu-3337-2026, подтверждающая импортный случай</div>
+        <div class="news-date">10 мая 2026 — 2 дня назад</div>
+      </div>
+      <div class="news-item">
+        <div class="news-source">🌐 GLOBAL.HEALTH · 9 МАЯ</div>
+        <div class="news-title">Global.health обновила линейный список: 247 случаев в 8 странах, данные открыты под CC BY 4.0</div>
+        <div class="news-date">9 мая 2026 — 3 дня назад</div>
+      </div>
+      <div class="news-item">
+        <div class="news-source">🇧🇷 MINISTERIO SAÚDE · 8 МАЯ</div>
+        <div class="news-title">Бразилия фиксирует первые случаи, связанные с текущей вспышкой в приграничных районах с Аргентиной</div>
+        <div class="news-date">8 мая 2026 — 4 дня назад</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PAGE: NOTIFICATIONS ====== -->
+  <div class="page" id="page-notif">
+    <div class="header" style="margin-bottom:0">
+      <div class="header-left">
+        <div style="font-size:22px">🔔</div>
+        <div class="app-title">Уведом<span>ления</span></div>
+      </div>
+    </div>
+
+    <div class="notif-hero">
+      <div class="notif-hero-icon">📡</div>
+      <div class="notif-hero-title">Push-уведомления</div>
+      <div class="notif-hero-sub">Получайте мгновенные уведомления о новых случаях заражения в выбранных странах. Данные обновляются каждые 6 часов.</div>
+    </div>
+
+    <div class="section" style="padding-top:14px">
+      <div class="section-label">/ мои подписки</div>
+    </div>
+
+    <div class="subscriptions-list">
+      <div class="sub-item">
+        <div class="sub-flag">🇦🇷</div>
+        <div class="sub-info">
+          <div class="sub-name">Аргентина</div>
+          <div class="sub-freq">каждые 6 ч · 87 случаев</div>
+        </div>
+        <div class="toggle" onclick="this.classList.toggle('off')"></div>
+      </div>
+      <div class="sub-item">
+        <div class="sub-flag">🇨🇱</div>
+        <div class="sub-info">
+          <div class="sub-name">Чили</div>
+          <div class="sub-freq">каждые 6 ч · 62 случая</div>
+        </div>
+        <div class="toggle" onclick="this.classList.toggle('off')"></div>
+      </div>
+      <div class="sub-item">
+        <div class="sub-flag">🇧🇷</div>
+        <div class="sub-info">
+          <div class="sub-name">Бразилия</div>
+          <div class="sub-freq">каждые 6 ч · 31 случай</div>
+        </div>
+        <div class="toggle off" onclick="this.classList.toggle('off')"></div>
+      </div>
+    </div>
+
+    <button class="add-country-btn">+ Добавить страну</button>
+
+    <div class="section" style="padding-top:16px">
+      <div class="section-label">/ настройки уведомлений</div>
+    </div>
+
+    <div style="margin: 10px 20px 0; display:flex; flex-direction:column; gap:6px;">
+      <div class="sub-item">
+        <div style="font-size:18px">⚡</div>
+        <div class="sub-info">
+          <div class="sub-name">Только новые случаи</div>
+          <div class="sub-freq">уведомлять при δ > 0</div>
+        </div>
+        <div class="toggle" onclick="this.classList.toggle('off')"></div>
+      </div>
+      <div class="sub-item">
+        <div style="font-size:18px">📊</div>
+        <div class="sub-info">
+          <div class="sub-name">Ежедневная сводка</div>
+          <div class="sub-freq">в 09:00 UTC</div>
+        </div>
+        <div class="toggle off" onclick="this.classList.toggle('off')"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-global" onclick="showPage('global')">
+    <div class="nav-icon">🌍</div>
+    <div class="nav-label">Карта</div>
+  </div>
+  <div class="nav-item" id="nav-news" onclick="showPage('news')">
+    <div class="nav-icon">📰</div>
+    <div class="nav-label">Новости</div>
+  </div>
+  <div class="nav-item" id="nav-notif" onclick="showPage('notif')">
+    <div class="nav-icon">🔔</div>
+    <div class="nav-label">Алерты</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// TELEGRAM INIT
+// ═══════════════════════════════════════════════════════
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  tg.setHeaderColor('#080c10');
+  tg.setBackgroundColor('#080c10');
+}
+const userId = tg?.initDataUnsafe?.user?.id ?? null;
+
+// ═══════════════════════════════════════════════════════
+// CONFIG — замени на свой Railway URL
+// ═══════════════════════════════════════════════════════
+const API = 'https://YOUR-PROJECT.railway.app';
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let countries = [];
+let currentCountry = null;
+let notifying = false;
+let subscribedIsos = new Set();
+
+// ═══════════════════════════════════════════════════════
+// ЗАГРУЗКА ДАННЫХ
+// ═══════════════════════════════════════════════════════
+async function loadStats() {
+  try {
+    showLoader(true);
+
+    const res = await fetch(`${API}/stats`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // Глобальный счётчик
+    animateCount(document.getElementById('globalCount'), data.global.total);
+
+    // Блок мини-статистики под счётчиком
+    const el = id => document.getElementById(id);
+    if (el('statConfirmed'))  el('statConfirmed').textContent  = data.global.confirmed;
+    if (el('statDeaths'))     el('statDeaths').textContent     = data.global.deaths;
+    if (el('statCFR'))        el('statCFR').textContent        = (data.global.cfr ?? 0) + '%';
+    if (el('statCountries'))  el('statCountries').textContent  = data.global.countries_count;
+    if (el('statNew24h'))     el('statNew24h').textContent     = '+' + data.global.new_24h;
+
+    // Время обновления
+    if (el('updateTime')) {
+      el('updateTime').textContent =
+        'обновлено ' + new Date(data.global.last_update).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'});
+    }
+
+    // Страны
+    countries = data.countries; // массив объектов из parser.py
+    renderCountries(countries);
+
+    // Загрузить подписки пользователя (если он авторизован)
+    if (userId) await loadUserSubscriptions();
+
+  } catch (e) {
+    console.error('Ошибка загрузки:', e);
+    showError('Не удалось загрузить данные. Попробуй позже.');
+  } finally {
+    showLoader(false);
+  }
+}
+
+// Загружаем на каком сабе пользователь
+async function loadUserSubscriptions() {
+  try {
+    const res = await fetch(`${API}/subscriptions/${userId}`);
+    const data = await res.json();
+    subscribedIsos = new Set(data.subscriptions ?? []);
+  } catch (_) {}
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER COUNTRIES
+// ═══════════════════════════════════════════════════════
+function renderCountries(list) {
+  const el = document.getElementById('countryList');
+  if (!el) return;
+  el.innerHTML = list.map((c, i) => `
+    <div class="country-item ${i===0?'top1':i===1?'top2':''}"
+         onclick="showDetail(${countries.indexOf(c)})"
+         style="animation-delay:${i * 0.05}s">
+      <div class="country-flag">${c.flag ?? '🏳️'}</div>
+      <div class="country-info">
+        <div class="country-name">${c.name}</div>
+        <div class="country-sub">${c.confirmed ?? 0} подтв · CFR ${c.cfr ?? 0}%</div>
+        <div class="country-bar-wrap">
+          <div class="country-bar" style="width:${c.pct ?? 0}%"></div>
+        </div>
+      </div>
+      <div class="country-right">
+        <div class="country-count ${c.total>50?'high':c.total>20?'med':''}">${c.total}</div>
+        ${(c.new_7d ?? 0) > 0
+          ? `<div class="country-new">+${c.new_7d} за 7д</div>`
+          : `<div class="country-new" style="color:var(--text3)">нет новых</div>`}
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCountries() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  renderCountries(countries.filter(c => c.name.toLowerCase().includes(q)));
+}
+
+// ═══════════════════════════════════════════════════════
+// DETAIL PAGE
+// ═══════════════════════════════════════════════════════
+function showDetail(idx) {
+  const c = countries[idx];
+  currentCountry = c;
+
+  document.getElementById('detailFlag').textContent = c.flag ?? '🏳️';
+  document.getElementById('detailName').textContent = c.name;
+  document.getElementById('dTotal').textContent = c.total;
+  document.getElementById('dCFR').textContent   = (c.cfr ?? 0) + '%';
+  document.getElementById('dNew').textContent   = '+' + (c.new_7d ?? 0);
+  document.getElementById('dRecov').textContent = c.deaths ?? 0; // или поле recov если есть
+
+  // Кнопка подписки — проверяем текущий статус
+  notifying = subscribedIsos.has(c.iso);
+  const btn = document.getElementById('notifyBtn');
+  btn.className = notifying ? 'notify-btn active' : 'notify-btn';
+  btn.innerHTML = notifying ? '✅ Подписан' : '🔔 Следить';
+
+  renderMiniChart(c);
+  showPage('detail');
+}
+
+function renderMiniChart(country) {
+  // Пока данных по дням нет — рисуем примерный тренд на основе new_7d
+  const base = country?.new_7d ?? 3;
+  const vals = Array.from({length: 14}, (_, i) =>
+    Math.max(0, Math.round(base * (0.3 + Math.random() * 0.7)))
+  );
+  vals[vals.length - 1] = base; // последний — реальный
+  const max = Math.max(...vals, 1);
+  const labels = ['29','30','1','2','3','4','5','6','7','8','9','10','11','12'];
+
+  document.getElementById('miniChart').innerHTML = vals.map((v, i) => `
+    <div class="chart-bar-col">
+      <div class="chart-bar" style="height:${(v/max)*52}px;opacity:${i===vals.length-1?1:0.4+i/vals.length*0.5}"></div>
+      <div class="chart-bar-label">${labels[i] ?? ''}</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// ПОДПИСКИ
+// ═══════════════════════════════════════════════════════
+async function toggleNotify() {
+  if (!currentCountry) return;
+
+  if (!tg) {
+    // Вне Telegram — fallback на REST API
+    await toggleViaAPI();
+    return;
+  }
+
+  notifying = !notifying;
+  const action = notifying ? 'subscribe' : 'unsubscribe';
+
+  // Обновляем Set подписок локально
+  if (notifying) subscribedIsos.add(currentCountry.iso);
+  else subscribedIsos.delete(currentCountry.iso);
+
+  // Отправляем данные в бот (bot.py → webapp_data_handler)
+  tg.sendData(JSON.stringify({
+    action,
+    iso: currentCountry.iso,
+    country_name: currentCountry.name
+  }));
+
+  // Обновляем кнопку
+  const btn = document.getElementById('notifyBtn');
+  btn.className = notifying ? 'notify-btn active' : 'notify-btn';
+  btn.innerHTML = notifying ? '✅ Подписан' : '🔔 Следить';
+
+  // После sendData Telegram закрывает WebApp — это нормально
+}
+
+async function toggleViaAPI() {
+  // Fallback для тестирования в браузере
+  notifying = !notifying;
+  try {
+    await fetch(`${API}/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId ?? 0,
+        country_iso: currentCountry.iso,
+        country_name: currentCountry.name,
+        subscribed: notifying
+      })
+    });
+  } catch (e) { console.error(e); }
+
+  const btn = document.getElementById('notifyBtn');
+  btn.className = notifying ? 'notify-btn active' : 'notify-btn';
+  btn.innerHTML = notifying ? '✅ Подписан' : '🔔 Следить';
+}
+
+// ═══════════════════════════════════════════════════════
+// НАВИГАЦИЯ
+// ═══════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (id !== 'detail') {
+    const nav = document.getElementById('nav-' + id);
+    if (nav) nav.classList.add('active');
+  } else {
+    const nav = document.getElementById('nav-global');
+    if (nav) nav.classList.add('active');
+  }
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function animateCount(el, target) {
+  if (!el) return;
+  let current = 0;
+  const step = Math.ceil(target / 40);
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = current;
+    if (current >= target) clearInterval(timer);
+  }, 30);
+}
+
+function showLoader(show) {
+  const el = document.getElementById('loader');
+  if (el) el.style.display = show ? 'flex' : 'none';
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+// ═══════════════════════════════════════════════════════
+// CANVAS ANIMATION (оставь как было)
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('virusCanvas');
+const ctx = canvas.getContext('2d');
+let nodes = [], W, H;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Node {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.r = 2 + Math.random() * 4;
+    this.vx = (Math.random() - .5) * 0.3;
+    this.vy = (Math.random() - .5) * 0.3;
+    this.spikes = 6 + Math.floor(Math.random() * 4);
+    this.spikeLen = this.r * (1.5 + Math.random());
+    this.hue = Math.random() > 0.7 ? 0 : 200;
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    const c = this.hue === 0 ? 'rgba(255,80,60,' : 'rgba(40,120,255,';
+    ctx.strokeStyle = c + '0.7)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    for (let i = 0; i < this.spikes; i++) {
+      const a = (i / this.spikes) * Math.PI * 2;
+      const cos = Math.cos(a), sin = Math.sin(a);
+      ctx.moveTo(cos * this.r, sin * this.r);
+      ctx.lineTo(cos * (this.r + this.spikeLen), sin * (this.r + this.spikeLen));
+    }
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = c + '0.3)';
+    ctx.fill();
+    ctx.restore();
+  }
+  update() {
+    this.x += this.vx; this.y += this.vy;
+    if (this.x < -50 || this.x > W + 50 || this.y < -50 || this.y > H + 50) this.reset();
+  }
+}
+
+for (let i = 0; i < 20; i++) nodes.push(new Node());
+
+function drawConnections() {
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 120) {
+        ctx.strokeStyle = `rgba(255,59,48,${(1 - d / 120) * 0.12})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animate() {
+  ctx.clearRect(0, 0, W, H);
+  drawConnections();
+  nodes.forEach(n => { n.update(); n.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ═══════════════════════════════════════════════════════
+// СТАРТ
+// ═══════════════════════════════════════════════════════
+loadStats();
+</script>
+</body>
+</html>

@@ -17,7 +17,8 @@ def process_data():
         print(f"Колонки в файле: {list(df.columns)}")
 
         # Проверяем наличие нужных колонок, если нет 'country' — ищем похожие
-        country_col = 'country' if 'country' in df.columns else None
+        possible_country_cols: list[str] = ['country', 'location', 'admin0', 'country_name']
+        country_col = next((c for c in possible_country_cols if c in df.columns), None)
         status_col = 'status' if 'status' in df.columns else None
         outcome_col = 'outcome' if 'outcome' in df.columns else None
 
