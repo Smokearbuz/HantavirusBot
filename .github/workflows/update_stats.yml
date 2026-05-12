@@ -1,31 +1,33 @@
 name: Hantavirus Auto Update
+
 on:
   schedule:
-    - cron: '0 */6 * * *'
-  workflow_dispatch:
+    - cron: '0 * * * *' # Раз в час
+  workflow_dispatch: # Позволяет запускать вручную
 
 jobs:
-  update:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install -r parser/requirements.txt
+        run: |
+          pip install pandas requests
 
       - name: Run Parser
         run: python parser/parser.py
 
-      - name: Commit and Push
+      - name: Commit and Push changes
         run: |
-          git config --global user.name "Hantavirus-Bot-Bot"
-          git config --global user.name "github-actions[bot]"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add data/stats.json
-          git commit -m "📊 Auto-update stats: $(date)" || exit 0
-          git push
+          # Проверяем, есть ли изменения, чтобы не сыпать ошибками если данных нет
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update stats" && git push)
