@@ -1330,6 +1330,8 @@ async function toggleViaAPI() {
 // ═══════════════════════════════════════════════════════
 // НАВИГАЦИЯ
 // ═══════════════════════════════════════════════════════
+let newsLoaded = false;
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
@@ -1342,6 +1344,12 @@ function showPage(id) {
     if (nav) nav.classList.add('active');
   }
   window.scrollTo(0, 0);
+
+  // Подгружаем новости только при первом открытии вкладки
+  if (id === 'news' && !newsLoaded) {
+    newsLoaded = true;
+    loadNews();
+  }
 }
 
 // ═══════════════════════════════════════════════════════

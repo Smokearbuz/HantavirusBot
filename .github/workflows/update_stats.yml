@@ -2,8 +2,8 @@ name: Update Hantavirus Stats
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # каждые 6 часов
-  workflow_dispatch:          # ручной запуск из GitHub UI
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
 
 jobs:
   update:
@@ -20,21 +20,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pandas requests
+          pip install pandas requests feedparser
 
-      - name: Run parser
+      - name: Run stats parser
         run: python parser/parser.py
 
-      - name: Commit updated stats.json
+      - name: Run news parser
+        run: python parser/news_parser.py
+
+      - name: Commit updated data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/stats.json
-          git diff --staged --quiet || git commit -m "chore: update stats.json [skip ci]"
+          git add data/stats.json data/news.json
+          git diff --staged --quiet || git commit -m "chore: update stats and news [skip ci]"
           git push
-
-      - name: Notify backend (trigger push notifications)
-        run: |
-          curl -s -X POST "${{ secrets.API_URL }}/webhook/update" \
-            -H "X-Webhook-Secret: ${{ secrets.WEBHOOK_SECRET }}" \
-            --fail || echo "⚠️ Webhook вернул ошибку (бот мог быть не запущен)"
