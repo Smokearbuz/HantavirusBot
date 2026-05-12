@@ -1,33 +1,40 @@
-name: Hantavirus Auto Update
+name: Update Hantavirus Stats
 
 on:
   schedule:
-    - cron: '0 * * * *' # Раз в час
-  workflow_dispatch: # Позволяет запускать вручную
+    - cron: "0 */6 * * *"   # каждые 6 часов
+  workflow_dispatch:          # ручной запуск из GitHub UI
 
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
           pip install pandas requests
 
-      - name: Run Parser
+      - name: Run parser
         run: python parser/parser.py
 
-      - name: Commit and Push changes
+      - name: Commit updated stats.json
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/stats.json
-          # Проверяем, есть ли изменения, чтобы не сыпать ошибками если данных нет
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update stats" && git push)
+          git diff --staged --quiet || git commit -m "chore: update stats.json [skip ci]"
+          git push
+
+      - name: Notify backend (trigger push notifications)
+        run: |
+          curl -s -X POST "${{ secrets.API_URL }}/webhook/update" \
+            -H "X-Webhook-Secret: ${{ secrets.WEBHOOK_SECRET }}" \
+            --fail || echo "⚠️ Webhook вернул ошибку (бот мог быть не запущен)"
