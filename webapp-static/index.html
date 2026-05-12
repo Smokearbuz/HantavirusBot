@@ -1144,7 +1144,7 @@ const userId = tg?.initDataUnsafe?.user?.id ?? null;
 // ═══════════════════════════════════════════════════════
 // CONFIG — замени на свой Railway URL
 // ═══════════════════════════════════════════════════════
-const API = 'https://YOUR-PROJECT.railway.app';
+const API = 'https://raw.githubusercontent.com/Smokearbuz/HantavirusBot/master/data';
 
 // ═══════════════════════════════════════════════════════
 // STATE
@@ -1160,38 +1160,29 @@ let subscribedIsos = new Set();
 async function loadStats() {
   try {
     showLoader(true);
-
-    const res = await fetch(`${API}/stats`);
+    const res = await fetch(`${API}/stats.json`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    // Глобальный счётчик
     animateCount(document.getElementById('globalCount'), data.global.total);
 
-    // Блок мини-статистики под счётчиком
     const el = id => document.getElementById(id);
-    if (el('statConfirmed'))  el('statConfirmed').textContent  = data.global.confirmed;
-    if (el('statDeaths'))     el('statDeaths').textContent     = data.global.deaths;
-    if (el('statCFR'))        el('statCFR').textContent        = (data.global.cfr ?? 0) + '%';
-    if (el('statCountries'))  el('statCountries').textContent  = data.global.countries_count;
-    if (el('statNew24h'))     el('statNew24h').textContent     = '+' + data.global.new_24h;
-
-    // Время обновления
+    if (el('statConfirmed'))  el('statConfirmed').textContent = data.global.confirmed;
+    if (el('statDeaths'))     el('statDeaths').textContent    = data.global.deaths;
+    if (el('statCFR'))        el('statCFR').textContent       = (data.global.cfr ?? 0) + '%';
+    if (el('statCountries'))  el('statCountries').textContent = data.global.countries_count;
+    if (el('statNew24h'))     el('statNew24h').textContent    = '+' + (data.global.new_24h ?? 0);
     if (el('updateTime')) {
       el('updateTime').textContent =
         'обновлено ' + new Date(data.global.last_update).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'});
     }
 
-    // Страны
-    countries = data.countries; // массив объектов из parser.py
+    countries = data.countries;
     renderCountries(countries);
 
-    // Загрузить подписки пользователя (если он авторизован)
-    if (userId) await loadUserSubscriptions();
-
   } catch (e) {
-    console.error('Ошибка загрузки:', e);
-    showError('Не удалось загрузить данные. Попробуй позже.');
+    console.error('Ошибка:', e);
+    showError('Не удалось загрузить данные.');
   } finally {
     showLoader(false);
   }
