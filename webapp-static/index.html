@@ -403,14 +403,14 @@ tg.expand();
 // ═══════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════
-const API_BASE = '/api'; // Прокси через Cloudflare Functions
+const API_BASE = 'https://raw.githubusercontent.com/Smokearbuz/HantavirusBot/master/data';
 
 let countries = [];
 let subscriptions = new Set();
 
 async function init() {
   try {
-    const res = await fetch(API_BASE + '/stats');
+    const res = await fetch(API_BASE + '/stats.json');
     const data = await res.json();
     
     // Global Stats
@@ -476,7 +476,7 @@ function renderCountries(list) {
 
 async function loadNews() {
   try {
-    const res = await fetch(API_BASE + '/news');
+    const res = await fetch(API_BASE + '/news.json');
     const data = await res.json();
     const list = document.getElementById('newsList');
     list.innerHTML = data.articles.map(a => `
