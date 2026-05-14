@@ -1,15 +1,115 @@
 {
   "global": {
     "total": 19,
-    "confirmed": 9,
-    "suspected": 0,
-    "deaths": 0,
-    "cfr": 0.0,
+    "confirmed": 8,
+    "deaths": 3,
+    "cfr": 37.5,
     "new_24h": 0,
-    "new_7d": 0,
-    "countries_count": 0,
-    "last_update": "2026-05-14T13:24:25Z",
-    "last_update_readable": "14.05.2026 13:24 UTC"
+    "new_7d": 3,
+    "growth_rate": 18.8,
+    "risk_level": "Moderate",
+    "last_update": "2026-05-14T16:51:38Z",
+    "demographics": {
+      "age": {
+        "0-18": 0,
+        "19-45": 1,
+        "46-65": 3,
+        "66+": 3,
+        "Unknown": 12
+      },
+      "gender": {
+        "male": 8,
+        "female": 6,
+        "unknown": 5
+      }
+    },
+    "hotspots": [
+      "French",
+      "Spanish",
+      "American"
+    ]
   },
-  "countries": []
+  "countries": [
+    {
+      "name": "Dutch",
+      "iso": "NL",
+      "flag": "🇳🇱",
+      "total": 3,
+      "deaths": 2,
+      "new_7d": 0,
+      "growth": 0.0
+    },
+    {
+      "name": "British",
+      "iso": "GB",
+      "flag": "🇬🇧",
+      "total": 3,
+      "deaths": 0,
+      "new_7d": 0,
+      "growth": 0.0
+    },
+    {
+      "name": "German",
+      "iso": "DE",
+      "flag": "🇩🇪",
+      "total": 2,
+      "deaths": 1,
+      "new_7d": 0,
+      "growth": 0.0
+    },
+    {
+      "name": "Singaporean",
+      "iso": "SG",
+      "flag": "🇸🇬",
+      "total": 2,
+      "deaths": 0,
+      "new_7d": 0,
+      "growth": 0.0
+    },
+    {
+      "name": "French",
+      "iso": "FR",
+      "flag": "🇫🇷",
+      "total": 2,
+      "deaths": 0,
+      "new_7d": 1,
+      "growth": 50.0
+    },
+    {
+      "name": "Spanish",
+      "iso": "ES",
+      "flag": "🇪🇸",
+      "total": 2,
+      "deaths": 0,
+      "new_7d": 1,
+      "growth": 50.0
+    },
+    {
+      "name": "American",
+      "iso": "US",
+      "flag": "🇺🇸",
+      "total": 2,
+      "deaths": 0,
+      "new_7d": 1,
+      "growth": 50.0
+    },
+    {
+      "name": "Swiss",
+      "iso": "CH",
+      "flag": "🇨🇭",
+      "total": 1,
+      "deaths": 0,
+      "new_7d": 0,
+      "growth": 0.0
+    },
+    {
+      "name": "Argentinian",
+      "iso": "AR",
+      "flag": "🇦🇷",
+      "total": 1,
+      "deaths": 0,
+      "new_7d": 0,
+      "growth": 0.0
+    }
+  ]
 }

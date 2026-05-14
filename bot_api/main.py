@@ -9,7 +9,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from bot_api.config import STATS_PATH, WEBHOOK_SECRET
+NEWS_PATH = "data/news.json"
 from bot_api.database import db
+from fastapi.staticfiles import StaticFiles
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +51,16 @@ async def get_country_stats(iso: str):
     if not country:
         raise HTTPException(status_code=404, detail=f"Страна {iso} не найдена")
     return JSONResponse(content=country)
+
+
+@app.get("/news")
+async def get_news():
+    """Отдаёт весь news.json фронтенду"""
+    path = Path(NEWS_PATH)
+    if not path.exists():
+        raise HTTPException(status_code=503, detail="Новости ещё не загружены")
+    with open(path, encoding="utf-8") as f:
+        return JSONResponse(content=json.load(f))
 
 
 # ── Подписки (fallback если WebApp data не работает) ─────────────────────────
@@ -114,3 +126,6 @@ async def health():
         "redis": redis_ok,
         "stats_file": path.exists(),
     }
+
+# Монтируем статику (WebApp) — теперь по адресу /app/index.html будет доступен фронтенд
+app.mount("/", StaticFiles(directory="webapp-static", html=True), name="static")

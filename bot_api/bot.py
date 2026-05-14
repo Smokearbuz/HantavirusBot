@@ -125,6 +125,9 @@ async def send_notifications(stats: dict):
         # Формируем текст уведомления
         cfr_str = f"{country['cfr']}%" if country.get("cfr") else "—"
         deaths_delta = country["deaths"] - prev_by_iso.get(iso, {}).get("deaths", country["deaths"])
+        
+        is_hotspot = country['name'] in stats['global'].get('hotspots', [])
+        risk_level = stats['global'].get('risk_level', 'Moderate')
 
         text = (
             f"{country['flag']} <b>Новые случаи: {country['name']}</b>\n\n"
@@ -133,8 +136,14 @@ async def send_notifications(stats: dict):
         )
         if deaths_delta > 0:
             text += f"💀 Новых летальных: <b>+{deaths_delta}</b>\n"
+        
+        text += f"⚠️ Летальность (CFR): <b>{cfr_str}</b>\n"
+        
+        if is_hotspot:
+            text += "🔥 <b>ВНИМАНИЕ: Горячая точка!</b>\n"
+        
         text += (
-            f"⚠️ Летальность (CFR): <b>{cfr_str}</b>\n\n"
+            f"📊 Глобальный риск: <b>{risk_level}</b>\n\n"
             f"🔗 Источник: Global.health / Hondius 2026"
         )
 

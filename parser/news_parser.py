@@ -185,35 +185,74 @@ def deduplicate(articles: list[dict]) -> list[dict]:
 
 # ── Главная функция ───────────────────────────────────────────────────────────
 
+def fetch_repo_news() -> list[dict]:
+    """Извлекает новости из репозитория kraemer-lab (результаты работы LLM по статьям)"""
+    articles = []
+    repo_news_url = "https://raw.githubusercontent.com/kraemer-lab/Hondius_hantavirus_h2026/main/data/news%20sources/hantavirus_results.json"
+    try:
+        resp = requests.get(repo_news_url, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+
+        for item in data:
+            if item.get("status") != "success": continue
+            res = item.get("result", {})
+            desc = res.get("description", "")
+            if not desc:
+                # Если описания нет в exposures, попробуем взять из первого exposure
+                exposures = res.get("exposures", [])
+                if exposures: desc = exposures[0].get("description", "")
+            
+            if not desc: continue
+
+            source_url = item.get("url", "")
+            source_name = source_url.split("/")[2].replace("www.", "")
+
+            articles.append({
+                "source_code": "REPO",
+                "source_name": source_name,
+                "icon": "🔬",
+                "title": desc[:150] + "..." if len(desc) > 150 else desc,
+                "url": source_url,
+                "published_raw": res.get("reporting_window") or "",
+                "published": res.get("reporting_window") or "May 2026",
+                "lang": "English",
+                "country": res.get("country", "Global"),
+                "image": "",
+            })
+        print(f"  Repo News: получено {len(articles)} статей")
+    except Exception as e:
+        print(f"  ❌ Repo News ошибка: {e}")
+    return articles
+
+# ── Главная функция ───────────────────────────────────────────────────────────
+
 def fetch_news():
     print("📰 Загрузка новостей...")
 
     all_articles = []
 
-    # WHO — официальный источник, приоритет
-    who_articles = fetch_who_rss()
-    all_articles.extend(who_articles)
+    # 1. WHO — официальный источник, приоритет
+    all_articles.extend(fetch_who_rss())
 
-    # GDELT — мировые СМИ
-    gdelt_articles = fetch_gdelt()
-    all_articles.extend(gdelt_articles)
+    # 2. Repo News — научный анализ
+    all_articles.extend(fetch_repo_news())
+
+    # 3. GDELT — мировые СМИ
+    all_articles.extend(fetch_gdelt())
 
     # Дедупликация
     all_articles = deduplicate(all_articles)
 
-    # Сортировка: WHO вперёд, потом по дате
+    # Сортировка: WHO и REPO вперёд
     def sort_key(a):
-        priority = 0 if a["source_code"] == "WHO" else 1
+        priority = 0 if a["source_code"] == "WHO" else (1 if a["source_code"] == "REPO" else 2)
         return (priority, a.get("published_raw", ""))
 
-    all_articles.sort(key=sort_key, reverse=False)
-    # Разворачиваем чтобы свежие были первыми внутри каждой группы
-    who_items = [a for a in all_articles if a["source_code"] == "WHO"]
-    other_items = [a for a in all_articles if a["source_code"] != "WHO"]
-    other_items.sort(key=lambda a: a.get("published_raw", ""), reverse=True)
-
-    final = who_items + other_items
-    final = final[:MAX_ARTICLES]
+    all_articles.sort(key=sort_key)
+    
+    # Свежие новости
+    final = all_articles[:MAX_ARTICLES]
 
     result = {
         "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
