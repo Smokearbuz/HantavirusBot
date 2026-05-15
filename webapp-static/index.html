@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <meta charset="UTF-8">
@@ -241,6 +241,28 @@
   .mt-12 { margin-top: 12px; }
   .mb-12 { margin-bottom: 12px; }
   .hidden { display: none; }
+  
+  /* Language Switcher */
+  .lang-switcher {
+    display: flex;
+    background: var(--secondary-bg-color);
+    padding: 2px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .lang-btn {
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--hint-color);
+  }
+  .lang-btn.active {
+    background: var(--bg-color);
+    color: var(--text-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
 </style>
 </head>
 <body>
@@ -251,26 +273,32 @@
   <div class="page active" id="page-global">
     <div class="header">
       <div class="header-title">Hanta<span>Tracker</span></div>
-      <div class="status-badge"><div class="dot"></div> LIVE</div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="lang-switcher">
+          <div class="lang-btn" id="lang-en" onclick="setLanguage('en')">EN</div>
+          <div class="lang-btn" id="lang-ru" onclick="setLanguage('ru')">RU</div>
+        </div>
+        <div class="status-badge"><div class="dot"></div> <span data-t="status_live">LIVE</span></div>
+      </div>
     </div>
 
     <div class="section">
-      <div class="label mb-12">Глобальный обзор</div>
+      <div class="label mb-12" data-t="global_overview">Global Overview</div>
       <div class="card">
         <div class="main-stat">
           <div>
             <div class="main-val" id="gTotal">0</div>
-            <div class="sub-val">Всего случаев</div>
+            <div class="sub-val" data-t="total_cases">Total Cases</div>
           </div>
           <div style="text-align: right;">
             <div class="item-delta" id="gDelta">+0</div>
-            <div class="sub-val">за 24ч</div>
+            <div class="sub-val" data-t="last_24h">in 24h</div>
           </div>
         </div>
         <div class="stats-grid">
           <div class="stat-box">
             <div class="stat-box-val" style="color: var(--accent-red)" id="gConfirmed">0</div>
-            <div class="stat-box-label">Подтв.</div>
+            <div class="stat-box-label" data-t="confirmed">Confirmed</div>
           </div>
           <div class="stat-box">
             <div class="stat-box-val" style="color: var(--accent-orange)" id="gCFR">0%</div>
@@ -278,7 +306,7 @@
           </div>
           <div class="stat-box">
             <div class="stat-box-val" style="color: var(--accent-green)" id="gDeaths">0</div>
-            <div class="stat-box-label">Смертей</div>
+            <div class="stat-box-label" data-t="deaths">Deaths</div>
           </div>
         </div>
       </div>
@@ -286,7 +314,7 @@
       <!-- Risk Meter -->
       <div class="card risk-card">
         <div class="risk-header">
-          <div class="label" style="text-transform: none;">Риск по оценке WHO</div>
+          <div class="label" style="text-transform: none;" data-t="who_risk">WHO Risk Assessment</div>
           <div id="riskLabel" style="font-size: 12px; font-weight: 700; color: var(--accent-orange);">MODERATE</div>
         </div>
         <div class="risk-bar">
@@ -296,17 +324,17 @@
     </div>
 
     <div class="section" style="padding-bottom: 0;">
-      <div class="label">Демография</div>
+      <div class="label" data-t="demographics">Demographics</div>
       <div class="card mt-12">
         <div class="demo-row">
-          <div class="demo-label">М / Ж</div>
+          <div class="demo-label" data-t="gender">M / F</div>
           <div class="demo-track">
             <div class="demo-fill" id="genderFill" style="background: var(--accent-blue);"></div>
             <div class="demo-val" id="genderVal">50 / 50</div>
           </div>
         </div>
         <div class="demo-row">
-          <div class="demo-label">46+ лет</div>
+          <div class="demo-label" data-t="age_46">46+ years</div>
           <div class="demo-track">
             <div class="demo-fill" id="ageFill" style="background: var(--accent-orange);"></div>
             <div class="demo-val" id="ageVal">0%</div>
@@ -316,14 +344,14 @@
     </div>
 
     <div class="section">
-      <div class="label mb-12">Список стран</div>
+      <div class="label mb-12" data-t="country_list">Country List</div>
       <div class="search-wrap" style="padding: 0; margin-bottom: 12px;">
-        <input type="text" class="search-input" placeholder="Поиск страны..." id="searchInput" oninput="filterCountries()">
+        <input type="text" class="search-input" placeholder="Search country..." id="searchInput" oninput="filterCountries()" data-t-placeholder="search_placeholder">
       </div>
       <div class="tab-bar">
-        <div class="tab-item active">Все</div>
-        <div class="tab-item">Хотспоты</div>
-        <div class="tab-item">Латинская Америка</div>
+        <div class="tab-item active" data-t="tab_all">All</div>
+        <div class="tab-item" data-t="tab_hotspots">Hotspots</div>
+        <div class="tab-item" data-t="tab_latam">Latin America</div>
       </div>
     </div>
 
@@ -335,8 +363,8 @@
   <!-- PAGE: NEWS -->
   <div class="page" id="page-news">
     <div class="header">
-      <div class="header-title">Новости</div>
-      <div class="status-badge">UPDATE</div>
+      <div class="header-title" data-t="nav_news">News</div>
+      <div class="status-badge" data-t="status_update">UPDATE</div>
     </div>
     <div class="section" id="newsList">
       <!-- Generated by JS -->
@@ -350,7 +378,7 @@
     </div>
     <div class="detail-hero">
       <div class="detail-flag" id="dFlag">🏳️</div>
-      <div class="detail-name" id="dName">Страна</div>
+      <div class="detail-name" id="dName">Country</div>
       <div class="item-delta" id="dHotspot" style="margin-top: 4px;">HOTSPOT 📈</div>
     </div>
     
@@ -358,21 +386,21 @@
       <div class="stats-grid">
         <div class="stat-box">
           <div class="stat-box-val" id="dTotal">0</div>
-          <div class="stat-box-label">Всего</div>
+          <div class="stat-box-label" data-t="total">Total</div>
         </div>
         <div class="stat-box">
           <div class="stat-box-val" id="dNew">+0</div>
-          <div class="stat-box-label">За 7д</div>
+          <div class="stat-box-label" data-t="last_7d">in 7d</div>
         </div>
         <div class="stat-box">
           <div class="stat-box-val" id="dDeath">0</div>
-          <div class="stat-box-label">Умерло</div>
+          <div class="stat-box-label" data-t="died_label">Deaths</div>
         </div>
       </div>
     </div>
     
     <div class="section">
-      <button class="add-country-btn" style="width: 100%; padding: 14px; background: var(--button-color); color: var(--button-text-color); border: none; border-radius: 14px; font-weight: 700;" id="subBtn" onclick="toggleSub()">🔔 Подписаться на обновления</button>
+      <button class="add-country-btn" style="width: 100%; padding: 14px; background: var(--button-color); color: var(--button-text-color); border: none; border-radius: 14px; font-weight: 700;" id="subBtn" onclick="toggleSub()" data-t="sub_btn_off">Subscribe to updates</button>
     </div>
   </div>
 
@@ -382,15 +410,15 @@
 <div class="bottom-nav">
   <div class="nav-btn active" onclick="showPage('global')">
     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-    Обзор
+    <span data-t="nav_overview">Overview</span>
   </div>
   <div class="nav-btn" onclick="showPage('news')">
     <svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 16H5V5h14v14zM8 15h8v2H8v-2zm0-4h8v2H8v-2zm0-4h8v2H8V7z"/></svg>
-    Новости
+    <span data-t="nav_news">News</span>
   </div>
-  <div class="nav-btn" onclick="tg.showAlert('Раздел в разработке')">
+  <div class="nav-btn" onclick="tg.showAlert(t('dev_notice'))">
     <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-    Алерты
+    <span data-t="nav_alerts">Alerts</span>
   </div>
 </div>
 
@@ -399,7 +427,96 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Настройка цветов темы
+// ═══════════════════════════════════════════════════════
+// I18N
+// ═══════════════════════════════════════════════════════
+const i18n = {
+  en: {
+    status_live: 'LIVE',
+    status_update: 'UPDATE',
+    global_overview: 'Global Overview',
+    total_cases: 'Total Cases',
+    last_24h: 'in 24h',
+    confirmed: 'Confirmed',
+    deaths: 'Deaths',
+    who_risk: 'WHO Risk Assessment',
+    demographics: 'Demographics',
+    gender: 'M / F',
+    age_46: '46+ years',
+    country_list: 'Country List',
+    search_placeholder: 'Search country...',
+    tab_all: 'All',
+    tab_hotspots: 'Hotspots',
+    tab_latam: 'Latin America',
+    nav_overview: 'Overview',
+    nav_news: 'News',
+    nav_alerts: 'Alerts',
+    total: 'Total',
+    last_7d: 'in 7d',
+    died_label: 'Deaths',
+    sub_btn_off: '🔔 Subscribe to updates',
+    sub_btn_on: '✅ Subscribed',
+    died: 'died',
+    growth: 'growth',
+    dev_notice: 'Section under development',
+    source: 'source'
+  },
+  ru: {
+    status_live: 'В ЭФИРЕ',
+    status_update: 'ОБНОВЛЕНИЕ',
+    global_overview: 'Глобальный обзор',
+    total_cases: 'Всего случаев',
+    last_24h: 'за 24ч',
+    confirmed: 'Подтв.',
+    deaths: 'Смертей',
+    who_risk: 'Риск по оценке WHO',
+    demographics: 'Демография',
+    gender: 'М / Ж',
+    age_46: '46+ лет',
+    country_list: 'Список стран',
+    search_placeholder: 'Поиск страны...',
+    tab_all: 'Все',
+    tab_hotspots: 'Хотспоты',
+    tab_latam: 'Латинская Америка',
+    nav_overview: 'Обзор',
+    nav_news: 'Новости',
+    nav_alerts: 'Алерты',
+    total: 'Всего',
+    last_7d: 'за 7д',
+    died_label: 'Умерло',
+    sub_btn_off: '🔔 Подписаться на обновления',
+    sub_btn_on: '✅ Вы подписаны',
+    died: 'умерло',
+    growth: 'рост',
+    dev_notice: 'Раздел в разработке',
+    source: 'источник'
+  }
+};
+
+let currentLang = 'en';
+
+function t(key) {
+  return i18n[currentLang][key] || key;
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.id === 'lang-' + lang));
+  applyTranslations();
+  if (countries.length > 0) renderCountries(countries);
+  loadNews();
+  if (currentCountry) showDetail(currentCountry.iso);
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-t]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-t'));
+  });
+  document.querySelectorAll('[data-t-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-t-placeholder'));
+  });
+}
+
 // ═══════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════
@@ -407,8 +524,12 @@ const API_BASE = 'https://raw.githubusercontent.com/Smokearbuz/HantavirusBot/mas
 
 let countries = [];
 let subscriptions = new Set();
+let currentCountry = null;
 
 async function init() {
+  applyTranslations();
+  setLanguage('en');
+  
   try {
     const res = await fetch(API_BASE + '/stats.json');
     const data = await res.json();
@@ -441,7 +562,7 @@ async function init() {
     const female = data.global.demographics.gender.female;
     const total = male + female || 1;
     document.getElementById('genderFill').style.width = (male/total*100) + '%';
-    document.getElementById('genderVal').textContent = `${male} м / ${female} ж`;
+    document.getElementById('genderVal').textContent = `${male} ${t('gender').split(' / ')[0]} / ${female} ${t('gender').split(' / ')[1]}`;
     
     const age46 = data.global.demographics.age["46-65"] + data.global.demographics.age["66+"];
     const ageTotal = data.global.total || 1;
@@ -464,7 +585,7 @@ function renderCountries(list) {
       <div class="item-flag">${c.flag}</div>
       <div class="item-body">
         <div class="item-name">${c.name}</div>
-        <div class="item-hint">${c.deaths} умерло · ${c.growth}% рост</div>
+        <div class="item-hint">${c.deaths} ${t('died')} · ${c.growth}% ${t('growth')}</div>
       </div>
       <div class="item-right">
         <div class="item-val">${c.total}</div>
@@ -504,7 +625,7 @@ function showDetail(iso) {
   
   const isSubbed = subscriptions.has(iso);
   const btn = document.getElementById('subBtn');
-  btn.textContent = isSubbed ? '✅ Вы подписаны' : '🔔 Подписаться на обновления';
+  btn.textContent = isSubbed ? t('sub_btn_on') : t('sub_btn_off');
   btn.style.background = isSubbed ? 'var(--secondary-bg-color)' : 'var(--button-color)';
   btn.style.color = isSubbed ? 'var(--text-color)' : 'var(--button-text-color)';
 
