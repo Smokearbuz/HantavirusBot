@@ -35,3 +35,13 @@ jobs:
           git add data/stats.json data/news.json
           git diff --staged --quiet || git commit -m "chore: update stats and news [skip ci]"
           git push
+
+      - name: Trigger Bot Webhook
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+        if: env.WEBHOOK_URL != ''
+        run: |
+          curl -X POST "${WEBHOOK_URL}/webhook/update" \
+          -H "X-Webhook-Secret: ${WEBHOOK_SECRET}" \
+          -H "Content-Type: application/json"

@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from datetime import datetime
 
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
@@ -15,11 +16,17 @@ logger = logging.getLogger(__name__)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-
 # ── /start ────────────────────────────────────────────────────────────────────
 
 @dp.message(Command("start"))
 async def start_handler(message: types.Message):
+    # Регистрируем юзера в БД
+    await db.get_or_create_user(
+        chat_id=message.chat.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name
+    )
+    
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
             text="🦠 Открыть HantaTracker",
@@ -31,14 +38,13 @@ async def start_handler(message: types.Message):
         "🔬 <b>HantaTracker</b> — мониторинг вспышки хантавируса 2026.\n\n"
         "• Глобальная статистика в реальном времени\n"
         "• Данные по каждой стране\n"
-        "• Push-уведомления при новых случаях\n\n"
+        "• Push-уведомления при новых случаях и новостях\n\n"
         "Нажми кнопку ниже:",
         reply_markup=kb,
         parse_mode="HTML"
     )
 
-
-# ── /mystats — подписки юзера ─────────────────────────────────────────────────
+# ── /mystats ──────────────────────────────────────────────────────────────────
 
 @dp.message(Command("mystats"))
 async def mystats_handler(message: types.Message):
@@ -51,9 +57,7 @@ async def mystats_handler(message: types.Message):
     text += "\n\nДля отмены — открой бот и нажми ✅ Подписан."
     await message.answer(text, parse_mode="HTML")
 
-
-# ── WebApp data — сюда приходят данные от фронтенда ──────────────────────────
-# Фронтенд вызывает: Telegram.WebApp.sendData(JSON.stringify({action, iso, country_name}))
+# ── WebApp data ───────────────────────────────────────────────────────────────
 
 @dp.message(F.web_app_data)
 async def webapp_data_handler(message: types.Message):
@@ -68,52 +72,54 @@ async def webapp_data_handler(message: types.Message):
             await db.subscribe_user(chat_id, iso)
             await message.answer(
                 f"✅ Подписка оформлена!\n\n"
-                f"Буду уведомлять о новых случаях: <b>{country_name}</b>\n"
-                f"Данные обновляются каждые 6 часов.",
+                f"Буду уведомлять о новых случаях и новостях: <b>{country_name}</b>",
                 parse_mode="HTML"
             )
-
         elif action == "unsubscribe":
             await db.unsubscribe_user(chat_id, iso)
             await message.answer(
                 f"🔕 Ты отписался от уведомлений: <b>{country_name}</b>",
                 parse_mode="HTML"
             )
-
-        else:
-            logger.warning(f"Неизвестный action от WebApp: {action}")
-
-    except json.JSONDecodeError:
-        logger.error(f"Невалидный JSON от WebApp: {message.web_app_data.data}")
     except Exception as e:
         logger.error(f"Ошибка в webapp_data_handler: {e}")
 
+# ── Рассылка обновлений ───────────────────────────────────────────────────────
 
-# ── Функция рассылки уведомлений (вызывается из main.py) ──────────────────────
+async def process_updates(stats: dict, news: list):
+    """Главный цикл обработки обновлений: статистика + новости"""
+    await _handle_stats_update(stats)
+    await _handle_news_update(news)
 
-async def send_notifications(stats: dict):
-    """
-    Сравнивает текущие stats с предыдущими, находит страны с новыми случаями,
-    рассылает уведомления подписчикам.
-    """
+async def _handle_stats_update(stats: dict):
     prev = await db.get_prev_stats()
-
     if not prev:
-        # Первый запуск — просто сохраняем без рассылки
         await db.save_prev_stats(stats)
-        logger.info("Первый запуск — сохранили baseline, рассылки нет.")
         return
 
-    # Строим словарь предыдущих данных по ISO
     prev_by_iso = {c["iso"]: c for c in prev.get("countries", [])}
-
-    notifications_sent = 0
+    risk_level = stats['global'].get('risk_level', 'Moderate')
+    
+    # Сверяем риск уровень (глобальный)
+    prev_risk = prev['global'].get('risk_level', 'Moderate')
+    if risk_level != prev_risk:
+        # Уведомляем всех о смене уровня риска? (Пока опустим или сделаем broadcast)
+        pass
 
     for country in stats.get("countries", []):
         iso = country["iso"]
         curr_total = country["total"]
-        prev_total = prev_by_iso.get(iso, {}).get("total", curr_total)
-        delta = curr_total - prev_total
+        prev_data = prev_by_iso.get(iso, {"total": curr_total, "deaths": country["deaths"], "growth": 0})
+        delta = curr_total - prev_data["total"]
+
+        # Сохраняем в историю (SQL)
+        await db.save_daily_snapshot(
+            country_iso=iso,
+            total=curr_total,
+            deaths=country["deaths"],
+            new=delta,
+            risk=risk_level
+        )
 
         if delta <= 0:
             continue
@@ -122,57 +128,61 @@ async def send_notifications(stats: dict):
         if not subscribers:
             continue
 
-        # Формируем текст уведомления
-        cfr_str = f"{country['cfr']}%" if country.get("cfr") else "—"
-        deaths_delta = country["deaths"] - prev_by_iso.get(iso, {}).get("deaths", country["deaths"])
-        
-        is_hotspot = country['name'] in stats['global'].get('hotspots', [])
-        risk_level = stats['global'].get('risk_level', 'Moderate')
-
         text = (
             f"{country['flag']} <b>Новые случаи: {country['name']}</b>\n\n"
-            f"📈 Новых за обновление: <b>+{delta}</b>\n"
-            f"📊 Всего случаев: <b>{curr_total}</b>\n"
-        )
-        if deaths_delta > 0:
-            text += f"💀 Новых летальных: <b>+{deaths_delta}</b>\n"
-        
-        text += f"⚠️ Летальность (CFR): <b>{cfr_str}</b>\n"
-        
-        if is_hotspot:
-            text += "🔥 <b>ВНИМАНИЕ: Горячая точка!</b>\n"
-        
-        text += (
-            f"📊 Глобальный риск: <b>{risk_level}</b>\n\n"
-            f"🔗 Источник: Global.health / Hondius 2026"
+            f"📈 Новых: <b>+{delta}</b>\n"
+            f"📊 Всего: <b>{curr_total}</b>\n"
+            f"📊 Риск: <b>{risk_level}</b>\n\n"
+            f"🔗 <a href='{WEBAPP_URL}'>Подробнее в приложении</a>"
         )
 
         for chat_id in subscribers:
             try:
-                await bot.send_message(
-                    int(chat_id),
-                    text,
-                    parse_mode="HTML"
-                )
-                notifications_sent += 1
-                await asyncio.sleep(0.05)  # избегаем flood limit
-            except Exception as e:
-                logger.warning(f"Не удалось отправить {chat_id}: {e}")
+                await bot.send_message(int(chat_id), text, parse_mode="HTML")
+                await asyncio.sleep(0.05)
+            except Exception: pass
 
-    # Сохраняем текущие как новые "предыдущие"
     await db.save_prev_stats(stats)
-    logger.info(f"Рассылка завершена. Отправлено уведомлений: {notifications_sent}")
 
+async def _handle_news_update(news: list):
+    """Рассылка новых новостей"""
+    for item in news[:5]: # Проверяем последние 5
+        link = item.get("link")
+        if not link: continue
+        
+        # Генерируем ID для дедупликации (если нет)
+        ext_id = item.get("id", link)
+        
+        if await db.is_news_notified(ext_id):
+            continue
+
+        # Уведомляем (например, всех или по странам? Пока всех кто подписан хоть на что-то?)
+        # Для простоты — рассылаем всем, кто подписан на Глобальную статистику (или просто всем пользователям)
+        # Но лучше — всем активным пользователям.
+        
+        text = (
+            f"📰 <b>Свежие новости:</b>\n\n"
+            f"<b>{item.get('title')}</b>\n\n"
+            f"🔗 <a href='{link}'>Читать источник</a>"
+        )
+        
+        # Получаем всех пользователей (Chat ID)
+        chat_ids = await db.get_all_user_chat_ids()
+        
+        for chat_id in chat_ids:
+            try:
+                await bot.send_message(int(chat_id), text, parse_mode="HTML")
+                await asyncio.sleep(0.05)
+            except Exception: pass
+            
+        await db.save_news_article(ext_id, item.get('title'), link)
 
 # ── Запуск ────────────────────────────────────────────────────────────────────
 
 async def main():
+    await db.init_db()
     logger.info("🚀 HantaTracker Bot запущен")
     await dp.start_polling(bot)
 
-
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("🔴 Бот выключен")
+    asyncio.run(main())

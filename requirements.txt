@@ -1,0 +1,10 @@
+aiogram
+fastapi
+uvicorn
+redis
+python-dotenv
+sqlalchemy
+aiosqlite
+pandas
+requests
+feedparser

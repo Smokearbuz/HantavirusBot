@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HantaTracker 2026 - Presentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --accent-red: #ff3b30;
+            --accent-blue: #007aff;
+            --accent-orange: #ff9500;
+            --text: #ffffff;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #video-container {
+            width: 100%;
+            height: 100vh;
+            max-width: 1920px;
+            position: relative;
+            background: radial-gradient(circle at center, #111 0%, #050505 100%);
+            overflow: hidden;
+        }
+
+        /* Scanline effect */
+        #video-container::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 1s ease;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .slide.active { opacity: 1; }
+
+        /* Typography */
+        h1 { font-size: clamp(2rem, 8vw, 5rem); font-weight: 900; letter-spacing: -2px; margin-bottom: 10px; }
+        h1 span { color: var(--accent-red); }
+        .subtitle { font-family: 'Space Mono', monospace; font-size: clamp(0.8rem, 2vw, 1.2rem); color: var(--accent-blue); text-transform: uppercase; letter-spacing: 4px; }
+        
+        /* Slide 1: Intro */
+        .intro-logo {
+            filter: drop-shadow(0 0 20px rgba(255, 59, 48, 0.5));
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* Slide 2: Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 40px;
+        }
+        .stat-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transform: translateY(30px);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        .active .stat-card { transform: translateY(0); opacity: 1; }
+        .active .stat-card:nth-child(2) { transition-delay: 0.2s; }
+        .active .stat-card:nth-child(3) { transition-delay: 0.4s; }
+        .active .stat-card:nth-child(4) { transition-delay: 0.6s; }
+
+        .stat-val { font-size: 3rem; font-weight: 800; font-family: 'Space Mono', monospace; color: var(--accent-red); }
+        .stat-label { font-size: 0.9rem; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-top: 5px; }
+
+        /* Slide 3: Map/Hotspots */
+        .radar {
+            width: 300px; height: 300px;
+            border: 1px solid var(--accent-blue);
+            border-radius: 50%;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        .radar::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(0, 122, 255, 0.2) 360deg);
+            border-radius: 50%;
+            animation: rotate 4s linear infinite;
+        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .hotspot-tag {
+            position: absolute;
+            background: var(--accent-red);
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            animation: flicker 0.1s infinite;
+        }
+        @keyframes flicker { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.9; } }
+
+        /* Slide 4: Telegram UI */
+        .phone-mockup {
+            width: 280px; height: 500px;
+            background: #1c1c1c;
+            border-radius: 40px;
+            border: 8px solid #333;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        .tg-header { height: 50px; background: #242f3d; width: 100%; }
+        .tg-msg {
+            background: #2b5278;
+            padding: 12px;
+            border-radius: 12px 12px 12px 0;
+            margin: 15px;
+            font-size: 14px;
+            width: 80%;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .active .tg-msg { transform: scale(1); opacity: 1; transition-delay: 1s; }
+
+        /* Controls */
+        .controls {
+            position: absolute;
+            bottom: 40px;
+            display: flex;
+            gap: 20px;
+            z-index: 200;
+        }
+        .btn {
+            background: var(--text);
+            color: var(--bg);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: scale(1.05); }
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--text);
+        }
+
+        .lang-switch {
+            position: absolute;
+            top: 30px; right: 30px;
+            display: flex; gap: 10px;
+            z-index: 200;
+        }
+        .lang-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+        .lang-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); }
+
+        /* Progress Bar */
+        .progress-container {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            z-index: 300;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: var(--accent-red);
+        }
+
+        /* Overlay text */
+        .overlay-text {
+            margin-top: 30px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.5s 0.5s;
+        }
+        .active .overlay-text { opacity: 1; transform: translateY(0); }
+
+    </style>
+</head>
+<body>
+
+    <div id="video-container">
+        
+        <div class="lang-switch">
+            <button class="lang-btn active" onclick="setLang('ru')">RU</button>
+            <button class="lang-btn" onclick="setLang('en')">EN</button>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <!-- SLIDE 1: INTRO -->
+        <div class="slide active" id="slide1">
+            <div class="intro-logo">
+                <h1>Hanta<span>Tracker</span></h1>
+                <p class="subtitle" data-t="intro_sub">2026 Outbreak Monitor</p>
+            </div>
+            <p class="overlay-text" data-t="intro_text">Осведомлен — значит защищен</p>
+        </div>
+
+        <!-- SLIDE 2: STATS -->
+        <div class="slide" id="slide2">
+            <h1 data-t="stats_title">Real-time Data</h1>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="count-total">0</div>
+                    <div class="stat-label" data-t="stat_total">Total Cases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="count-deaths">0</div>
+                    <div class="stat-label" data-t="stat_deaths">Fatalities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val">34%</div>
+                    <div class="stat-label" data-t="stat_cfr">CFR (Rate)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" style="color: var(--accent-orange)">HIGH</div>
+                    <div class="stat-label" data-t="stat_risk">Global Risk</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: HOTSPOTS -->
+        <div class="slide" id="slide3">
+            <div class="radar">
+                <div class="hotspot-tag" style="top: 20%; left: 60%;">ARGENTINA</div>
+                <div class="hotspot-tag" style="top: 70%; left: 30%;">CHILE</div>
+                <div class="hotspot-tag" style="top: 40%; left: 10%;">BRAZIL</div>
+            </div>
+            <h1 data-t="hotspots_title">Hotspot Tracking</h1>
+            <p class="overlay-text" data-t="hotspots_text">Мгновенное выявление зон риска</p>
+        </div>
+
+        <!-- SLIDE 4: BOT -->
+        <div class="slide" id="slide4">
+            <div class="phone-mockup">
+                <div class="tg-header"></div>
+                <div style="height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 50px;">
+                    <div class="tg-msg" style="transition-delay: 1s;">
+                        <b>HantaTracker Bot</b><br>
+                        ⚠️ New cases in Chile: +12<br>
+                        Total: 1,450
+                    </div>
+                    <div class="tg-msg" style="transition-delay: 2s; background: #3b3b3b;">
+                        ✅ Monitor active
+                    </div>
+                </div>
+            </div>
+            <p class="overlay-text" data-t="bot_text">Push-уведомления в Telegram</p>
+        </div>
+
+        <!-- SLIDE 5: OUTRO -->
+        <div class="slide" id="slide5">
+            <h1>Hanta<span>Tracker</span></h1>
+            
+            <div style="margin: 20px 0;">
+                <p class="subtitle" data-t="outro_join">Join the channel</p>
+                <a href="https://t.me/JenwneBuild" class="stat-val" style="font-size: 2rem; color: var(--accent-blue); text-decoration: none; display: block; margin: 10px 0;">@JenwneBuild</a>
+                <p style="color: rgba(255,255,255,0.6);" data-t="outro_details">Details inside</p>
+            </div>
+
+            <div class="stat-card" style="margin-bottom: 30px; border-color: var(--accent-red); box-shadow: 0 0 20px rgba(255,59,48,0.2);">
+                <div class="stat-label" data-t="outro_release">Release 16.05</div>
+            </div>
+
+            <div class="controls">
+                <a href="https://t.me/Hantavirus2026Bot" class="btn" data-t="btn_launch">Launch Bot</a>
+                <a href="index.html" class="btn btn-outline" data-t="btn_app">Open WebApp</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const translations = {
+            ru: {
+                intro_sub: "Мониторинг вспышки 2026",
+                intro_text: "Осведомлен — значит защищен",
+                stats_title: "Данные в реальном времени",
+                stat_total: "Всего случаев",
+                stat_deaths: "Смертей",
+                stat_cfr: "Летальность",
+                stat_risk: "Глобальный риск",
+                hotspots_title: "Отслеживание хотспотов",
+                hotspots_text: "Мгновенное выявление зон риска",
+                bot_text: "Push-уведомления в Telegram",
+                btn_launch: "Запустить бота",
+                btn_app: "Открыть WebApp",
+                outro_join: "Присоединяйся к каналу",
+                outro_details: "Подробности там",
+                outro_release: "Релиз 16.05"
+            },
+            en: {
+                intro_sub: "2026 Outbreak Monitor",
+                intro_text: "Informed is Protected",
+                stats_title: "Real-time Data",
+                stat_total: "Total Cases",
+                stat_deaths: "Fatalities",
+                stat_cfr: "CFR Rate",
+                stat_risk: "Global Risk",
+                hotspots_title: "Hotspot Tracking",
+                hotspots_text: "Instant risk zone detection",
+                bot_text: "Push Alerts in Telegram",
+                btn_launch: "Launch Bot",
+                btn_app: "Open WebApp",
+                outro_join: "Join the channel",
+                outro_details: "Details inside",
+                outro_release: "Release 16.05"
+            }
+        };
+
+        let currentLang = 'ru';
+        
+        function setLang(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-t]').forEach(el => {
+                const key = el.getAttribute('data-t');
+                el.textContent = translations[lang][key];
+            });
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
+            });
+        }
+
+        let currentSlide = 1;
+        const totalSlides = 5;
+        const slideDuration = 4000; // 4 seconds per slide = 20 seconds total
+
+        function nextSlide() {
+            document.getElementById(`slide${currentSlide}`).classList.remove('active');
+            currentSlide++;
+            if (currentSlide > totalSlides) currentSlide = 1;
+            document.getElementById(`slide${currentSlide}`).classList.add('active');
+            
+            if (currentSlide === 2) animateNumbers();
+        }
+
+        function animateNumbers() {
+            animateValue("count-total", 0, 12450, 2000);
+            animateValue("count-deaths", 0, 4233, 2000);
+        }
+
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Timeline control
+        let startTime = Date.now();
+        function updateProgress() {
+            const elapsed = Date.now() - startTime;
+            const progress = (elapsed % (slideDuration * totalSlides)) / (slideDuration * totalSlides);
+            document.getElementById('progress').style.width = (progress * 100) + '%';
+            
+            const slideIdx = Math.floor((elapsed % (slideDuration * totalSlides)) / slideDuration) + 1;
+            if (slideIdx !== currentSlide) {
+                document.getElementById(`slide${currentSlide}`).classList.remove('active');
+                currentSlide = slideIdx;
+                document.getElementById(`slide${currentSlide}`).classList.add('active');
+                if (currentSlide === 2) animateNumbers();
+            }
+            
+            requestAnimationFrame(updateProgress);
+        }
+
+        setLang('ru');
+        updateProgress();
+    </script>
+</body>
+</html>
