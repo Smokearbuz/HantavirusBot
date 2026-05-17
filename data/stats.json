@@ -1,29 +1,31 @@
 {
   "global": {
-    "total": 19,
-    "confirmed": 8,
+    "total": 20,
+    "confirmed": 9,
     "deaths": 3,
-    "cfr": 37.5,
+    "cfr": 33.3,
     "new_24h": 0,
-    "new_7d": 0,
-    "growth_rate": 0.0,
-    "risk_level": "Low",
-    "last_update": "2026-05-17T12:50:43Z",
+    "new_7d": 1,
+    "growth_rate": 5.3,
+    "risk_level": "Moderate",
+    "last_update": "2026-05-17T18:49:56Z",
     "demographics": {
       "age": {
         "0-18": 0,
         "19-45": 1,
         "46-65": 3,
         "66+": 3,
-        "Unknown": 12
+        "Unknown": 13
       },
       "gender": {
         "male": 8,
         "female": 6,
-        "unknown": 5
+        "unknown": 6
       }
     },
-    "hotspots": []
+    "hotspots": [
+      "Canadian"
+    ]
   },
   "countries": [
     {
@@ -106,6 +108,15 @@
       "deaths": 0,
       "new_7d": 0,
       "growth": 0.0
+    },
+    {
+      "name": "Canadian",
+      "iso": "CA",
+      "flag": "🏳️",
+      "total": 1,
+      "deaths": 0,
+      "new_7d": 1,
+      "growth": 100.0
     }
   ]
 }
