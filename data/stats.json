@@ -5,10 +5,10 @@
     "deaths": 3,
     "cfr": 37.5,
     "new_24h": 0,
-    "new_7d": 3,
-    "growth_rate": 18.8,
-    "risk_level": "Moderate",
-    "last_update": "2026-05-16T18:45:17Z",
+    "new_7d": 0,
+    "growth_rate": 0.0,
+    "risk_level": "Low",
+    "last_update": "2026-05-17T01:51:07Z",
     "demographics": {
       "age": {
         "0-18": 0,
@@ -23,11 +23,7 @@
         "unknown": 5
       }
     },
-    "hotspots": [
-      "French",
-      "Spanish",
-      "American"
-    ]
+    "hotspots": []
   },
   "countries": [
     {
@@ -72,8 +68,8 @@
       "flag": "🇫🇷",
       "total": 2,
       "deaths": 0,
-      "new_7d": 1,
-      "growth": 50.0
+      "new_7d": 0,
+      "growth": 0.0
     },
     {
       "name": "Spanish",
@@ -81,8 +77,8 @@
       "flag": "🇪🇸",
       "total": 2,
       "deaths": 0,
-      "new_7d": 1,
-      "growth": 50.0
+      "new_7d": 0,
+      "growth": 0.0
     },
     {
       "name": "American",
@@ -90,8 +86,8 @@
       "flag": "🇺🇸",
       "total": 2,
       "deaths": 0,
-      "new_7d": 1,
-      "growth": 50.0
+      "new_7d": 0,
+      "growth": 0.0
     },
     {
       "name": "Swiss",
