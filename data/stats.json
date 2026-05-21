@@ -1,26 +1,26 @@
 {
   "global": {
-    "total": 20,
-    "confirmed": 9,
-    "deaths": 3,
-    "cfr": 33.3,
+    "total": 21,
+    "confirmed": 0,
+    "deaths": 0,
+    "cfr": 0.0,
     "new_24h": 0,
     "new_7d": 0,
     "growth_rate": 0.0,
     "risk_level": "Low",
-    "last_update": "2026-05-21T08:52:26Z",
+    "last_update": "2026-05-21T14:34:09Z",
     "demographics": {
       "age": {
         "0-18": 0,
-        "19-45": 1,
-        "46-65": 3,
-        "66+": 3,
-        "Unknown": 13
+        "19-45": 0,
+        "46-65": 0,
+        "66+": 0,
+        "Unknown": 21
       },
       "gender": {
-        "male": 8,
-        "female": 6,
-        "unknown": 6
+        "male": 0,
+        "female": 0,
+        "unknown": 0
       }
     },
     "hotspots": []
@@ -31,7 +31,7 @@
       "iso": "NL",
       "flag": "🇳🇱",
       "total": 3,
-      "deaths": 2,
+      "deaths": 0,
       "new_7d": 0,
       "growth": 0.0
     },
@@ -49,7 +49,7 @@
       "iso": "DE",
       "flag": "🇩🇪",
       "total": 2,
-      "deaths": 1,
+      "deaths": 0,
       "new_7d": 0,
       "growth": 0.0
     },
@@ -90,6 +90,15 @@
       "growth": 0.0
     },
     {
+      "name": "Canadian",
+      "iso": "CA",
+      "flag": "🏳️",
+      "total": 2,
+      "deaths": 0,
+      "new_7d": 0,
+      "growth": 0.0
+    },
+    {
       "name": "Swiss",
       "iso": "CH",
       "flag": "🇨🇭",
@@ -102,15 +111,6 @@
       "name": "Argentinian",
       "iso": "AR",
       "flag": "🇦🇷",
-      "total": 1,
-      "deaths": 0,
-      "new_7d": 0,
-      "growth": 0.0
-    },
-    {
-      "name": "Canadian",
-      "iso": "CA",
-      "flag": "🏳️",
       "total": 1,
       "deaths": 0,
       "new_7d": 0,
