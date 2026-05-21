@@ -5,10 +5,10 @@
     "deaths": 3,
     "cfr": 33.3,
     "new_24h": 0,
-    "new_7d": 1,
-    "growth_rate": 5.3,
-    "risk_level": "Moderate",
-    "last_update": "2026-05-20T19:59:43Z",
+    "new_7d": 0,
+    "growth_rate": 0.0,
+    "risk_level": "Low",
+    "last_update": "2026-05-21T01:59:17Z",
     "demographics": {
       "age": {
         "0-18": 0,
@@ -23,9 +23,7 @@
         "unknown": 6
       }
     },
-    "hotspots": [
-      "Canadian"
-    ]
+    "hotspots": []
   },
   "countries": [
     {
@@ -115,8 +113,8 @@
       "flag": "🏳️",
       "total": 1,
       "deaths": 0,
-      "new_7d": 1,
-      "growth": 100.0
+      "new_7d": 0,
+      "growth": 0.0
     }
   ]
 }
