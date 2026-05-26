@@ -1,6 +1,6 @@
 {
   "global": {
-    "total": 23,
+    "total": 24,
     "confirmed": 0,
     "deaths": 0,
     "cfr": 0.0,
@@ -8,14 +8,14 @@
     "new_7d": 0,
     "growth_rate": 0.0,
     "risk_level": "Low",
-    "last_update": "2026-05-25T19:13:06Z",
+    "last_update": "2026-05-26T01:56:00Z",
     "demographics": {
       "age": {
         "0-18": 0,
         "19-45": 0,
         "46-65": 0,
         "66+": 0,
-        "Unknown": 23
+        "Unknown": 24
       },
       "gender": {
         "male": 0,
@@ -45,6 +45,15 @@
       "growth": 0.0
     },
     {
+      "name": "Spanish",
+      "iso": "ES",
+      "flag": "🇪🇸",
+      "total": 3,
+      "deaths": 0,
+      "new_7d": 0,
+      "growth": 0.0
+    },
+    {
       "name": "German",
       "iso": "DE",
       "flag": "🇩🇪",
@@ -66,15 +75,6 @@
       "name": "French",
       "iso": "FR",
       "flag": "🇫🇷",
-      "total": 2,
-      "deaths": 0,
-      "new_7d": 0,
-      "growth": 0.0
-    },
-    {
-      "name": "Spanish",
-      "iso": "ES",
-      "flag": "🇪🇸",
       "total": 2,
       "deaths": 0,
       "new_7d": 0,
